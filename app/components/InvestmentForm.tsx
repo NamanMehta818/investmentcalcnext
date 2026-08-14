@@ -2,7 +2,8 @@
 
 import { useState } from 'react';
 import FormInput from './FormInput';
-import { YearlyResult, SavedInvestment } from '../types';
+import YearSelect from './YearSelect';
+import { YearlyResult, SavedInvestment } from '../type/types';
 
 type InvestmentFormProps = { onCalculate: (data: YearlyResult[] | null) => void; };
 
@@ -13,29 +14,24 @@ export default function InvestmentForm({ onCalculate }: InvestmentFormProps) {
   const [startYear, setStartYear] = useState('');
   const [endYear, setEndYear] = useState('');
 
-  const handleSubmit = () => {
+  const handleStartYearChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const newStart = e.target.value;
+    setStartYear(newStart);
+    if (endYear !== '' && parseInt(endYear) <= parseInt(newStart)) {
+      setEndYear('');
+    }
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+
     const principal = parseFloat(amount);
     const rate = parseFloat(result);
     const start = parseInt(startYear);
     const end = parseInt(endYear);
 
-    if (isNaN(principal) || isNaN(rate) || isNaN(start) || isNaN(end)) {
-      alert('fill in all fields with valid numbers.');
-      onCalculate(null);
-      return;
-    }
-    if (principal < 0) {
-      alert('Investment cannot be negative.');
-      onCalculate(null);
-      return;
-    }
-    if (rate < 0) {
-      alert('return cannot be negative.');
-      onCalculate(null);
-      return;
-    }
-    if (end <= start) {
-      alert('End year must be after start year.');
+    if (isNaN(start) || isNaN(end)) {
+      alert('Please select both a start and end year.');
       onCalculate(null);
       return;
     }
@@ -52,18 +48,18 @@ export default function InvestmentForm({ onCalculate }: InvestmentFormProps) {
   };
 
   return (
-    <div>
-      <FormInput label="Investment Name:" type="text" value={name} onChange={(e) => setName(e.target.value)} />
-      <FormInput label="Amount you are investing:" type="number" value={amount} onChange={(e) => setAmount(e.target.value)} min={0} />
-      <FormInput label="Expected return (%):" type="number" value={result} onChange={(e) => setResult(e.target.value)} min={0} />
+    <form onSubmit={handleSubmit}>
+      <FormInput label="Investment Name:" type="text" value={name} onChange={(e) => setName(e.target.value)} required />
+      <FormInput label="Amount you are investing:" type="number" value={amount} onChange={(e) => setAmount(e.target.value)} min={0} required />
+      <FormInput label="Expected return (%):" type="number" value={result} onChange={(e) => setResult(e.target.value)} min={0} required />
       <div className="mb-4">
-        <label className="block mb-1">Year range:</label>
+        <label className="block mb-1 text-gray-900">Year range:</label>
         <div className="flex gap-2">
-          <FormInput label="" type="number" value={startYear} onChange={(e) => setStartYear(e.target.value)} placeholder="Start year" />
-          <FormInput label="" type="number" value={endYear} onChange={(e) => setEndYear(e.target.value)} placeholder="End year" />
+          <YearSelect value={startYear} onChange={handleStartYearChange} placeholder="Start year" />
+          <YearSelect value={endYear} onChange={(e) => setEndYear(e.target.value)} placeholder="End year" minYear={startYear ? parseInt(startYear) : undefined} />
         </div>
       </div>
-      <button onClick={handleSubmit} className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Calculate return</button>
-    </div>
+      <button type="submit" className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Calculate return</button>
+    </form>
   );
 }

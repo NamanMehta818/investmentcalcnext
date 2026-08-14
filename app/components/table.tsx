@@ -1,4 +1,4 @@
-import { YearlyResult } from '../types';
+import { YearlyResult } from '../type/types';
 
 type ResultsTableProps = { data: YearlyResult[] };
 

@@ -1,0 +1,2 @@
+export interface YearlyResult { year: number; value: number };
+export interface SavedInvestment { name: string; amount: number; rate: number; startYear: number; endYear: number; data: YearlyResult[] };
