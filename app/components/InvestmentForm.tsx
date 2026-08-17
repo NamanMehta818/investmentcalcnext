@@ -14,7 +14,7 @@ export default function InvestmentForm({ onCalculate }: InvestmentFormProps) {
   const [startYear, setStartYear] = useState('');
   const [endYear, setEndYear] = useState('');
 
-  const handleStartYearChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+  const handleStartYearChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newStart = e.target.value;
     setStartYear(newStart);
     if (endYear !== '' && parseInt(endYear) <= parseInt(newStart)) {
@@ -31,7 +31,7 @@ export default function InvestmentForm({ onCalculate }: InvestmentFormProps) {
     const end = parseInt(endYear);
 
     if (isNaN(start) || isNaN(end)) {
-      alert('Please select both a start and end year.');
+      alert('select both a start and end year.');
       onCalculate(null);
       return;
     }
@@ -56,7 +56,7 @@ export default function InvestmentForm({ onCalculate }: InvestmentFormProps) {
         <label className="block mb-1 text-gray-900">Year range:</label>
         <div className="flex gap-2">
           <YearSelect value={startYear} onChange={handleStartYearChange} placeholder="Start year" />
-          <YearSelect value={endYear} onChange={(e) => setEndYear(e.target.value)} placeholder="End year" minYear={startYear ? parseInt(startYear) : undefined} />
+          <YearSelect value={endYear} onChange={(e) => setEndYear(e.target.value)} placeholder="End year" minYear={startYear ? parseInt(startYear) : undefined} disabled={!startYear} />
         </div>
       </div>
       <button type="submit" className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Calculate return</button>
