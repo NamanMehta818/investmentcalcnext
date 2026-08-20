@@ -22,7 +22,7 @@ export default function InvestmentForm({ onCalculate }: InvestmentFormProps) {
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     const principal = parseFloat(amount);
@@ -31,7 +31,7 @@ export default function InvestmentForm({ onCalculate }: InvestmentFormProps) {
     const end = parseInt(endYear);
 
     if (isNaN(start) || isNaN(end)) {
-      alert('select both a start and end year.');
+      alert('Please select both a start and end year.');
       onCalculate(null);
       return;
     }
@@ -45,6 +45,16 @@ export default function InvestmentForm({ onCalculate }: InvestmentFormProps) {
     const entry: SavedInvestment = { name: name || 'Untitled', amount: principal, rate, startYear: start, endYear: end, data };
     const existing: SavedInvestment[] = JSON.parse(localStorage.getItem('investments') || '[]');
     localStorage.setItem('investments', JSON.stringify([...existing, entry]));
+
+    try {
+      await fetch('http://localhost:4000/investments', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(entry),
+      });
+    } catch (err) {
+      console.error('Failed to save investment to database:', err);
+    }
   };
 
   return (
