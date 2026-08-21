@@ -22,9 +22,25 @@ export default function PastCalculations({ refreshTrigger }: PastCalculationsPro
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [editForm, setEditForm] = useState({ name: '', amount: '', rate: '', startYear: '', endYear: '' });
 
+  async function fetchInvestments() {
+    const result = await fetch('http://localhost:4000/investments', {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' },
+    });
+    const raw = await result.json();
+    return raw.map((inv: any) => ({
+      ...inv,
+      amount: Number(inv.amount),
+      rate: Number(inv.rate),
+      startYear: Number(inv.startYear ?? inv.start_year),
+      endYear: Number(inv.endYear ?? inv.end_year),
+    }));
+  }
+
   useEffect(() => {
-    const stored: SavedInvestment[] = JSON.parse(localStorage.getItem('investments') || '[]');
-    setInvestments(stored);
+    fetchInvestments().then((data: SavedInvestment[]) => {
+      setInvestments(data);
+    });
     setSelected([]);
     setComparing(false);
     setEditingIndex(null);
@@ -39,12 +55,21 @@ export default function PastCalculations({ refreshTrigger }: PastCalculationsPro
     }
   };
 
-  const handleDelete = (index: number) => {
-    const updated = investments.filter((_, i) => i !== index);
-    setInvestments(updated);
-    localStorage.setItem('investments', JSON.stringify(updated));
+  const handleDelete = async (index: number) => {
+    const target = investments[index];
     setSelected([]);
     setComparing(false);
+
+    if (target.id) {
+      try {
+        await fetch(`http://localhost:4000/investments/${target.id}`, { method: 'DELETE' });
+      } catch (err) {
+        console.error('Failed to delete from database:', err);
+      }
+    }
+
+    const refreshed = await fetchInvestments();
+    setInvestments(refreshed);
   };
 
   const startEdit = (index: number) => {
@@ -53,7 +78,7 @@ export default function PastCalculations({ refreshTrigger }: PastCalculationsPro
     setEditingIndex(index);
   };
 
-  const saveEdit = (index: number) => {
+  const saveEdit = async (index: number) => {
     const principal = parseFloat(editForm.amount);
     const rate = parseFloat(editForm.rate);
     const start = parseInt(editForm.startYear);
@@ -64,11 +89,24 @@ export default function PastCalculations({ refreshTrigger }: PastCalculationsPro
       return;
     }
 
-    const updatedEntry: SavedInvestment = { name: editForm.name || 'Untitled', amount: principal, rate, startYear: start, endYear: end, data: buildData(principal, rate, start, end) };
-    const updated = investments.map((inv, i) => (i === index ? updatedEntry : inv));
-    setInvestments(updated);
-    localStorage.setItem('investments', JSON.stringify(updated));
+    const existingId = investments[index].id;
+    const updatedEntry: SavedInvestment = { id: existingId, name: editForm.name || 'Untitled', amount: principal, rate, startYear: start, endYear: end, data: buildData(principal, rate, start, end) };
     setEditingIndex(null);
+
+    if (existingId) {
+      try {
+        await fetch(`http://localhost:4000/investments/${existingId}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(updatedEntry),
+        });
+      } catch (err) {
+        console.error('Failed to update database:', err);
+      }
+    }
+
+    const refreshed = await fetchInvestments();
+    setInvestments(refreshed);
   };
 
   if (investments.length === 0) {
@@ -106,7 +144,7 @@ export default function PastCalculations({ refreshTrigger }: PastCalculationsPro
               <div className="flex items-center gap-2">
                 <div onClick={() => toggleSelect(i)} className="flex-1 cursor-pointer select-none flex items-baseline gap-2">
                   <p className={`font-semibold ${selected.includes(i) ? 'text-blue-700' : 'text-gray-900'}`}>{inv.name}</p>
-                  <p className="text-xs text-gray-500">${inv.amount.toFixed(0)} at {inv.rate}%, {inv.startYear}–{inv.endYear}</p>
+                  <p className="text-xs text-gray-500">${inv.amount} at {inv.rate}%, {inv.startYear}–{inv.endYear}</p>
                 </div>
                 <button onClick={() => startEdit(i)} className="text-gray-500 hover:text-gray-800">
                   <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" /></svg>

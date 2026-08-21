@@ -31,7 +31,7 @@ export default function InvestmentForm({ onCalculate }: InvestmentFormProps) {
     const end = parseInt(endYear);
 
     if (isNaN(start) || isNaN(end)) {
-      alert('Please select both a start and end year.');
+      alert('select both a start and end year.');
       onCalculate(null);
       return;
     }
@@ -43,8 +43,6 @@ export default function InvestmentForm({ onCalculate }: InvestmentFormProps) {
     onCalculate(data);
 
     const entry: SavedInvestment = { name: name || 'Untitled', amount: principal, rate, startYear: start, endYear: end, data };
-    const existing: SavedInvestment[] = JSON.parse(localStorage.getItem('investments') || '[]');
-    localStorage.setItem('investments', JSON.stringify([...existing, entry]));
 
     try {
       await fetch('http://localhost:4000/investments', {
