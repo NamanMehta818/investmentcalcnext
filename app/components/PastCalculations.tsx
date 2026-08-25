@@ -21,6 +21,7 @@ export default function PastCalculations({ refreshTrigger }: PastCalculationsPro
   const [comparing, setComparing] = useState(false);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [editForm, setEditForm] = useState({ name: '', amount: '', rate: '', startYear: '', endYear: '' });
+  const [resultView, setResultView] = useState<'table' | 'graph'>('graph');
 
   async function fetchInvestments() {
     const result = await fetch('http://localhost:4000/investments', {
@@ -110,7 +111,7 @@ export default function PastCalculations({ refreshTrigger }: PastCalculationsPro
   };
 
   if (investments.length === 0) {
-    return <p className="text-gray-500">No past investments yet.</p>;
+    return <p className="text-gray-500 dark:text-gray-400">No past investments yet.</p>;
   }
 
   const buildRateScenarios = (inv: SavedInvestment): SavedInvestment[] => [
@@ -125,31 +126,31 @@ export default function PastCalculations({ refreshTrigger }: PastCalculationsPro
     <div>
       <div className="flex flex-col gap-3">
         {investments.map((inv, i) => (
-          <div key={i} className={`border rounded p-3 ${selected.includes(i) ? 'border-blue-500 bg-blue-50' : 'border-gray-200'}`}>
+          <div key={i} className={`border rounded p-3 ${selected.includes(i) ? 'border-blue-500 bg-blue-50 dark:bg-blue-950' : 'border-gray-200 dark:border-gray-700'}`}>
             {editingIndex === i ? (
               <div className="flex flex-col gap-2">
-                <input value={editForm.name} onChange={(e) => setEditForm({ ...editForm, name: e.target.value })} placeholder="Name" className="border border-gray-300 rounded px-2 py-1 text-gray-900" />
-                <input value={editForm.amount} onChange={(e) => setEditForm({ ...editForm, amount: e.target.value })} placeholder="Amount" type="number" className="border border-gray-300 rounded px-2 py-1 text-gray-900" />
-                <input value={editForm.rate} onChange={(e) => setEditForm({ ...editForm, rate: e.target.value })} placeholder="Rate %" type="number" className="border border-gray-300 rounded px-2 py-1 text-gray-900" />
+                <input value={editForm.name} onChange={(e) => setEditForm({ ...editForm, name: e.target.value })} placeholder="Name" className="border border-gray-300 dark:border-gray-600 rounded px-2 py-1 text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-700" />
+                <input value={editForm.amount} onChange={(e) => setEditForm({ ...editForm, amount: e.target.value })} placeholder="Amount" type="number" className="border border-gray-300 dark:border-gray-600 rounded px-2 py-1 text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-700" />
+                <input value={editForm.rate} onChange={(e) => setEditForm({ ...editForm, rate: e.target.value })} placeholder="Rate %" type="number" className="border border-gray-300 dark:border-gray-600 rounded px-2 py-1 text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-700" />
                 <div className="flex gap-2">
-                  <input value={editForm.startYear} onChange={(e) => setEditForm({ ...editForm, startYear: e.target.value })} placeholder="Start year" type="number" className="border border-gray-300 rounded px-2 py-1 text-gray-900 w-full" />
-                  <input value={editForm.endYear} onChange={(e) => setEditForm({ ...editForm, endYear: e.target.value })} placeholder="End year" type="number" className="border border-gray-300 rounded px-2 py-1 text-gray-900 w-full" />
+                  <input value={editForm.startYear} onChange={(e) => setEditForm({ ...editForm, startYear: e.target.value })} placeholder="Start year" type="number" className="border border-gray-300 dark:border-gray-600 rounded px-2 py-1 text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-700 w-full" />
+                  <input value={editForm.endYear} onChange={(e) => setEditForm({ ...editForm, endYear: e.target.value })} placeholder="End year" type="number" className="border border-gray-300 dark:border-gray-600 rounded px-2 py-1 text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-700 w-full" />
                 </div>
                 <div className="flex gap-2 mt-1">
                   <button onClick={() => saveEdit(i)} className="bg-blue-600 text-white px-3 py-1 rounded text-sm hover:bg-blue-700">Save</button>
-                  <button onClick={() => setEditingIndex(null)} className="bg-gray-200 text-gray-800 px-3 py-1 rounded text-sm hover:bg-gray-300">Cancel</button>
+                  <button onClick={() => setEditingIndex(null)} className="bg-gray-200 dark:bg-gray-600 text-gray-800 dark:text-gray-100 px-3 py-1 rounded text-sm hover:bg-gray-300 dark:hover:bg-gray-500">Cancel</button>
                 </div>
               </div>
             ) : (
               <div className="flex items-center gap-2">
                 <div onClick={() => toggleSelect(i)} className="flex-1 cursor-pointer select-none flex items-baseline gap-2">
-                  <p className={`font-semibold ${selected.includes(i) ? 'text-blue-700' : 'text-gray-900'}`}>{inv.name}</p>
-                  <p className="text-xs text-gray-500">${inv.amount} at {inv.rate}%, {inv.startYear}–{inv.endYear}</p>
+                  <p className={`font-semibold ${selected.includes(i) ? 'text-blue-700 dark:text-blue-400' : 'text-gray-900 dark:text-gray-100'}`}>{inv.name}</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">${inv.amount} at {inv.rate}%, {inv.startYear}–{inv.endYear}</p>
                 </div>
-                <button onClick={() => startEdit(i)} className="text-gray-500 hover:text-gray-800">
+                <button onClick={() => startEdit(i)} className="text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200">
                   <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" /></svg>
                 </button>
-                <button onClick={() => handleDelete(i)} className="text-red-600 hover:text-red-800">
+                <button onClick={() => handleDelete(i)} className="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300">
                   <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" /><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" /><line x1="10" y1="11" x2="10" y2="17" /><line x1="14" y1="11" x2="14" y2="17" /></svg>
                 </button>
               </div>
@@ -165,42 +166,53 @@ export default function PastCalculations({ refreshTrigger }: PastCalculationsPro
       )}
 
       {comparing && selected.length === 1 && (
-        <div className="mt-4 flex gap-6">
-          <div className="w-1/2">
-            <p className="font-semibold text-gray-900 mb-1">{investments[selected[0]].name}</p>
+        <div className="mt-4">
+          <div className="flex items-center justify-between mb-3">
+            <p className="font-semibold text-gray-900 dark:text-gray-100">{investments[selected[0]].name}</p>
+            <button onClick={() => setResultView(resultView === 'table' ? 'graph' : 'table')} className="bg-gray-700 text-white px-4 py-2 rounded hover:bg-gray-800">
+              Switch to {resultView === 'table' ? 'Graph' : 'Table'}
+            </button>
+          </div>
+          {resultView === 'table' ? (
             <ResultsTable data={investments[selected[0]].data} />
-          </div>
-          <div className="w-1/2">
+          ) : (
             <LineChart investments={buildRateScenarios(investments[selected[0]])} />
-          </div>
+          )}
         </div>
       )}
 
       {comparing && selected.length === 2 && (
         <div className="mt-4">
-          <div className="inline-block border border-purple-200 bg-purple-50 rounded px-3 py-2 mb-4">
-            <p className="text-xs text-gray-600">Combined final total</p>
-            <p className="text-lg font-bold text-purple-700">
-              ${(finalValue(investments[selected[0]]) + finalValue(investments[selected[1]])).toFixed(2)}
-            </p>
-            <p className="text-[10px] text-gray-500">
-              {investments[selected[0]].name}: ${finalValue(investments[selected[0]]).toFixed(2)} + {investments[selected[1]].name}: ${finalValue(investments[selected[1]]).toFixed(2)}
-            </p>
+          <div className="flex items-start justify-between mb-4">
+            <div className="inline-block border border-purple-200 dark:border-purple-800 bg-purple-50 dark:bg-purple-950 rounded px-3 py-2">
+              <p className="text-xs text-gray-600 dark:text-gray-400">Combined final total</p>
+              <p className="text-lg font-bold text-purple-700 dark:text-purple-400">
+                ${(finalValue(investments[selected[0]]) + finalValue(investments[selected[1]])).toFixed(2)}
+              </p>
+              <p className="text-[10px] text-gray-500 dark:text-gray-400">
+                {investments[selected[0]].name}: ${finalValue(investments[selected[0]]).toFixed(2)} + {investments[selected[1]].name}: ${finalValue(investments[selected[1]]).toFixed(2)}
+              </p>
+            </div>
+
+            <button onClick={() => setResultView(resultView === 'table' ? 'graph' : 'table')} className="bg-gray-700 text-white px-4 py-2 rounded hover:bg-gray-800">
+              Switch to {resultView === 'table' ? 'Graph' : 'Table'}
+            </button>
           </div>
 
-          <div className="flex gap-6">
-            <div className="w-1/3">
-              <p className="font-semibold text-gray-900 mb-1">{investments[selected[0]].name}</p>
-              <ResultsTable data={investments[selected[0]].data} />
+          {resultView === 'table' ? (
+            <div className="flex gap-6">
+              <div className="w-1/2">
+                <p className="font-semibold text-gray-900 dark:text-gray-100 mb-1">{investments[selected[0]].name}</p>
+                <ResultsTable data={investments[selected[0]].data} />
+              </div>
+              <div className="w-1/2">
+                <p className="font-semibold text-gray-900 dark:text-gray-100 mb-1">{investments[selected[1]].name}</p>
+                <ResultsTable data={investments[selected[1]].data} />
+              </div>
             </div>
-            <div className="w-1/3">
-              <p className="font-semibold text-gray-900 mb-1">{investments[selected[1]].name}</p>
-              <ResultsTable data={investments[selected[1]].data} />
-            </div>
-            <div className="w-1/3">
-              <LineChart investments={[investments[selected[0]], investments[selected[1]]]} />
-            </div>
-          </div>
+          ) : (
+            <LineChart investments={[investments[selected[0]], investments[selected[1]]]} />
+          )}
         </div>
       )}
     </div>
