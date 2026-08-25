@@ -10,13 +10,14 @@ export default function YearSelect({ value, onChange, placeholder, minYear, disa
 
   return (
     <>
-      <input list={listId}
+      <input
+        list={listId}
         type="number"
         value={value}
         onChange={onChange}
         placeholder={placeholder}
         disabled={disabled}
-        className="border border-gray-300 rounded px-3 py-2 w-full text-gray-900 disabled:bg-gray-100 disabled:cursor-not-allowed"
+        className="border border-gray-300 dark:border-gray-600 rounded px-3 py-2 w-full text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-700 disabled:bg-gray-100 dark:disabled:bg-gray-800 disabled:cursor-not-allowed"
       />
       <datalist id={listId}>
         {years.map((y) => (

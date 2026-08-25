@@ -61,7 +61,7 @@ export default function InvestmentForm({ onCalculate }: InvestmentFormProps) {
       <FormInput label="Amount you are investing:" type="number" value={amount} onChange={(e) => setAmount(e.target.value)} min={0} required />
       <FormInput label="Expected return (%):" type="number" value={result} onChange={(e) => setResult(e.target.value)} min={0} required />
       <div className="mb-4">
-        <label className="block mb-1 text-gray-900">Year range:</label>
+        <label className="block mb-1 text-gray-900 dark:text-gray-100">Year range:</label>
         <div className="flex gap-2">
           <YearSelect value={startYear} onChange={handleStartYearChange} placeholder="Start year" />
           <YearSelect value={endYear} onChange={(e) => setEndYear(e.target.value)} placeholder="End year" minYear={startYear ? parseInt(startYear) : undefined} disabled={!startYear} />

@@ -8,12 +8,12 @@ import { YearlyResult } from './type/types';
 
 export default function Home() {
   const [data, setData] = useState<YearlyResult[] | null>(null);
-  const [view, setView] = useState<'table' | 'graph'>('table');
+  const [view, setView] = useState<'table' | 'graph'>('graph');
 
   return (
-    <div className="min-h-screen flex flex-col items-center bg-gray-50 p-6 gap-4">
-      <div className="w-full max-w-lg bg-white border border-gray-200 rounded-lg shadow-sm p-6">
-        <h1 className="text-2xl font-bold mb-4 text-gray-900">Investment Form</h1>
+    <div className="min-h-screen flex flex-col items-center bg-gray-50 dark:bg-gray-950 p-6 gap-4">
+      <div className="w-full max-w-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm p-6">
+        <h1 className="text-2xl font-bold mb-4 text-gray-900 dark:text-gray-100">Investment Form</h1>
         <InvestmentForm onCalculate={setData} />
 
         {data && (
