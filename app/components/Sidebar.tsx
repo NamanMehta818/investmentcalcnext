@@ -11,6 +11,9 @@ export default function Sidebar() {
 
   return (
     <div className="w-48 min-h-screen bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-700 p-4 flex flex-col gap-2">
+      <Link href="/dashboard" className={linkClass('/dashboard')}>
+        Dashboard
+      </Link>
       <Link href="/" className={linkClass('/')}>
         Investment Form
       </Link>

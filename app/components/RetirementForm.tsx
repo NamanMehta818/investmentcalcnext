@@ -12,7 +12,6 @@ export default function RetirementForm({ onCalculate }: RetirementFormProps) {
   const [currentAge, setCurrentAge] = useState('');
   const [retirementAge, setRetirementAge] = useState('');
   const [currentIncome, setCurrentIncome] = useState('');
-  const [yearlyExpenses, setYearlyExpenses] = useState('');
   const [currentSavings, setCurrentSavings] = useState('');
 
   const [stocks, setStocks] = useState<AssetClass>({ allocation: '', growth: '' });
@@ -22,10 +21,16 @@ export default function RetirementForm({ onCalculate }: RetirementFormProps) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    const storedUser = localStorage.getItem('user');
+    if (!storedUser) {
+      alert('Please log in to save a retirement plan.');
+      return;
+    }
+    const user = JSON.parse(storedUser);
+
     const age = parseInt(currentAge);
     const retireAge = parseInt(retirementAge);
     const income = parseFloat(currentIncome);
-    const expenses = parseFloat(yearlyExpenses);
     const savings = parseFloat(currentSavings);
 
     const stocksAlloc = parseFloat(stocks.allocation) / 100;
@@ -35,8 +40,8 @@ export default function RetirementForm({ onCalculate }: RetirementFormProps) {
     const bondsGrowth = parseFloat(bonds.growth) / 100;
     const cashGrowth = parseFloat(cash.growth) / 100;
 
-    if (isNaN(age) || isNaN(retireAge) || isNaN(income) || isNaN(expenses) || isNaN(savings) || retireAge <= age) {
-      alert('Please fill in valid ages (retirement age must be after current age), income, expenses, and savings.');
+    if (isNaN(age) || isNaN(retireAge) || isNaN(income) || isNaN(savings) || retireAge <= age) {
+      alert('Please fill in valid ages (retirement age must be after current age), income, and savings.');
       onCalculate(null);
       return;
     }
@@ -52,28 +57,17 @@ export default function RetirementForm({ onCalculate }: RetirementFormProps) {
 
     const results = [];
     for (let a = age; a <= 110; a++) {
-      const total = stocksAmt + bondsAmt + cashAmt;
-      results.push({ age: a, stocks: stocksAmt, bonds: bondsAmt, cash: cashAmt, total });
+      results.push({ age: a, stocks: stocksAmt, bonds: bondsAmt, cash: cashAmt, total: stocksAmt + bondsAmt + cashAmt });
 
       stocksAmt = stocksAmt * (1 + stocksGrowth);
       bondsAmt = bondsAmt * (1 + bondsGrowth);
       cashAmt = cashAmt * (1 + cashGrowth);
 
-      const netFlow = (a < retireAge ? income : 0) - expenses;
-
-      if (netFlow >= 0) {
-        stocksAmt += netFlow * stocksAlloc;
-        bondsAmt += netFlow * bondsAlloc;
-        cashAmt += netFlow * cashAlloc;
-      } else if (total > 0) {
-        stocksAmt += netFlow * (stocksAmt / total);
-        bondsAmt += netFlow * (bondsAmt / total);
-        cashAmt += netFlow * (cashAmt / total);
+      if (a < retireAge) {
+        stocksAmt += income * stocksAlloc;
+        bondsAmt += income * bondsAlloc;
+        cashAmt += income * cashAlloc;
       }
-
-      stocksAmt = Math.max(0, stocksAmt);
-      bondsAmt = Math.max(0, bondsAmt);
-      cashAmt = Math.max(0, cashAmt);
     }
 
     onCalculate(results);
@@ -83,10 +77,10 @@ export default function RetirementForm({ onCalculate }: RetirementFormProps) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          userId: user.id,
           currentAge: age,
           retirementAge: retireAge,
           currentIncome: income,
-          yearlyExpenses: expenses,
           currentSavings: savings,
           stocksAllocation: stocksAlloc,
           stocksGrowth,
@@ -107,7 +101,6 @@ export default function RetirementForm({ onCalculate }: RetirementFormProps) {
       <FormInput label="Current age:" type="number" value={currentAge} onChange={(e) => setCurrentAge(e.target.value)} min={0} required />
       <FormInput label="Retirement age:" type="number" value={retirementAge} onChange={(e) => setRetirementAge(e.target.value)} min={0} required />
       <FormInput label="Current income:" type="number" value={currentIncome} onChange={(e) => setCurrentIncome(e.target.value)} min={0} required />
-      <FormInput label="Yearly expenses:" type="number" value={yearlyExpenses} onChange={(e) => setYearlyExpenses(e.target.value)} min={0} required />
       <FormInput label="Current savings:" type="number" value={currentSavings} onChange={(e) => setCurrentSavings(e.target.value)} min={0} required />
 
       <div className="grid grid-cols-2 gap-4 mb-4">

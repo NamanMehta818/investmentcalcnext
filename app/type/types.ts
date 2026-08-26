@@ -6,7 +6,6 @@ export type SavedRetirementPlan = {
   currentAge: number;
   retirementAge: number;
   currentIncome: number;
-  yearlyExpenses: number;
   currentSavings: number;
   stocksAllocation: number;
   stocksGrowth: number;
@@ -16,3 +15,4 @@ export type SavedRetirementPlan = {
   cashGrowth: number;
   data: RetirementYearResult[];
 };
+export type RetirementEvent = { id?: number; planId: number; name: string; age: number; endAge?: number | null; amount: number };
