@@ -1,30 +1,12 @@
 'use client';
 
-import { useState } from 'react';
-import InvestmentForm from './components/InvestmentForm';
-import ResultsTable from './components/table';
-import LineChart from './components/LineChart';
-import { YearlyResult } from './type/types';
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 
 export default function Home() {
-  const [data, setData] = useState<YearlyResult[] | null>(null);
-  const [view, setView] = useState<'table' | 'graph'>('graph');
-
-  return (
-    <div className="min-h-screen flex flex-col items-center bg-gray-50 dark:bg-gray-950 p-6 gap-4">
-      <div className="w-full max-w-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm p-6">
-        <h1 className="text-2xl font-bold mb-4 text-gray-900 dark:text-gray-100">Investment Form</h1>
-        <InvestmentForm onCalculate={setData} />
-
-        {data && (
-          <>
-            <button onClick={() => setView(view === 'table' ? 'graph' : 'table')} className="mt-4 bg-gray-700 text-white px-4 py-2 rounded hover:bg-gray-800">
-              Switch to {view === 'table' ? 'Graph' : 'Table'}
-            </button>
-            {view === 'table' ? <ResultsTable data={data} /> : <LineChart investments={[{ name: 'Result', amount: 0, rate: 0, startYear: 0, endYear: 0, data }]} />}
-          </>
-        )}
-      </div>
-    </div>
-  );
+  const router = useRouter();
+  useEffect(() => {
+    router.replace('/past-investments');
+  }, [router]);
+  return null;
 }

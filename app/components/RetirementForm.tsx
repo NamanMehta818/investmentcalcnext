@@ -3,12 +3,15 @@
 import { useState } from 'react';
 import FormInput from './FormInput';
 import { RetirementYearResult } from '../type/types';
+import { useSession } from '../lib/auth-client';
 
 type AssetClass = { allocation: string; growth: string };
 
 type RetirementFormProps = { onCalculate: (data: RetirementYearResult[] | null) => void; };
 
 export default function RetirementForm({ onCalculate }: RetirementFormProps) {
+  const { data: session } = useSession();
+
   const [currentAge, setCurrentAge] = useState('');
   const [retirementAge, setRetirementAge] = useState('');
   const [currentIncome, setCurrentIncome] = useState('');
@@ -21,12 +24,11 @@ export default function RetirementForm({ onCalculate }: RetirementFormProps) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const storedUser = localStorage.getItem('user');
-    if (!storedUser) {
+    if (!session?.user?.id) {
       alert('Please log in to save a retirement plan.');
       return;
     }
-    const user = JSON.parse(storedUser);
+    const userId = session.user.id;
 
     const age = parseInt(currentAge);
     const retireAge = parseInt(retirementAge);
@@ -77,7 +79,7 @@ export default function RetirementForm({ onCalculate }: RetirementFormProps) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          userId: user.id,
+          userId,
           currentAge: age,
           retirementAge: retireAge,
           currentIncome: income,

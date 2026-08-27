@@ -1,7 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { RetirementEvent, RetirementYearResult, SavedInvestment, SavedRetirementPlan } from '../type/types';
+import { RetirementEvent, RetirementYearResult, SavedInvestment } from '../type/types';
+import { useSession } from '../lib/auth-client';
 
 function buildRetirementData(currentAge: number, retirementAge: number, income: number, savings: number, stocksAlloc: number, stocksGrowth: number, bondsAlloc: number, bondsGrowth: number, cashAlloc: number, cashGrowth: number, events: RetirementEvent[] = []): RetirementYearResult[] {
   let stocksAmt = savings * stocksAlloc;
@@ -39,24 +40,51 @@ function buildRetirementData(currentAge: number, retirementAge: number, income: 
   return results;
 }
 
-function getCurrentValue(inv: SavedInvestment): number {
-  const currentYear = new Date().getFullYear();
-  const exact = inv.data.find((d) => d.year === currentYear);
+function getValueForYear(inv: SavedInvestment, year: number): number {
+  const exact = inv.data.find((d) => d.year === year);
   if (exact) return exact.value;
-  if (currentYear < inv.data[0]?.year) return inv.data[0]?.value ?? 0;
+  if (year < inv.data[0]?.year) return inv.data[0]?.value ?? 0;
   return inv.data[inv.data.length - 1]?.value ?? 0;
 }
 
+function getMonthlyReturnForInvestment(inv: SavedInvestment, year: number, month: number): number {
+  const baseline = getValueForYear(inv, year - 1);
+  const monthlyRate = Math.pow(1 + inv.rate / 100, 1 / 12) - 1;
+
+  const valueAtMonth = baseline * Math.pow(1 + monthlyRate, month + 1);
+  const valueAtPrevMonth = baseline * Math.pow(1 + monthlyRate, month);
+
+  return valueAtMonth - valueAtPrevMonth;
+}
+
+function getMonthsSinceStartOfYear(): { label: string; year: number; month: number }[] {
+  const months = [];
+  const now = new Date();
+  for (let m = now.getMonth(); m >= 0; m--) {
+    const d = new Date(now.getFullYear(), m, 1);
+    months.push({
+      label: d.toLocaleString('default', { month: 'long', year: 'numeric' }),
+      year: d.getFullYear(),
+      month: d.getMonth(),
+    });
+  }
+  return months;
+}
+
 export default function DashboardPage() {
-  const [monthlyReturn, setMonthlyReturn] = useState<number | null>(null);
+  const { data: session } = useSession();
+  const [investments, setInvestments] = useState<SavedInvestment[]>([]);
   const [onTrack, setOnTrack] = useState<boolean | null>(null);
   const [loading, setLoading] = useState(true);
+
+  const months = getMonthsSinceStartOfYear();
+  const [selectedMonthIndex, setSelectedMonthIndex] = useState(0);
 
   useEffect(() => {
     async function load() {
       const investmentsRes = await fetch('http://localhost:4000/investments');
       const rawInvestments = await investmentsRes.json();
-      const investments: SavedInvestment[] = rawInvestments.map((inv: any) => ({
+      const parsedInvestments: SavedInvestment[] = rawInvestments.map((inv: any) => ({
         id: inv.id,
         name: inv.name,
         amount: Number(inv.amount),
@@ -65,17 +93,10 @@ export default function DashboardPage() {
         endYear: Number(inv.end_year),
         data: inv.data,
       }));
+      setInvestments(parsedInvestments);
 
-      const totalMonthlyReturn = investments.reduce((sum, inv) => {
-        const currentValue = getCurrentValue(inv);
-        return sum + currentValue * (inv.rate / 100) / 12;
-      }, 0);
-      setMonthlyReturn(totalMonthlyReturn);
-
-      const storedUser = localStorage.getItem('user');
-      if (storedUser) {
-        const user = JSON.parse(storedUser);
-        const plansRes = await fetch(`http://localhost:4000/retirement-plans?userId=${user.id}`);
+      if (session?.user?.id) {
+        const plansRes = await fetch(`http://localhost:4000/retirement-plans?userId=${session.user.id}`);
         const rawPlans = await plansRes.json();
 
         if (rawPlans.length > 0) {
@@ -96,6 +117,8 @@ export default function DashboardPage() {
 
           const hitsZeroEarly = data.some((r) => r.age < 110 && r.total <= 0);
           setOnTrack(!hitsZeroEarly);
+        } else {
+          setOnTrack(null);
         }
       }
 
@@ -103,20 +126,36 @@ export default function DashboardPage() {
     }
 
     load();
-  }, []);
+  }, [session?.user?.id]);
+
+  const selectedMonth = months[selectedMonthIndex];
+  const monthlyReturn = investments.reduce((sum, inv) => {
+    return sum + getMonthlyReturnForInvestment(inv, selectedMonth.year, selectedMonth.month);
+  }, 0);
 
   return (
     <div className="min-h-screen flex flex-col items-center bg-gray-50 dark:bg-gray-950 p-6 gap-4">
       <div className="w-full max-w-3xl">
-        <h1 className="text-2xl font-bold mb-4 text-gray-900 dark:text-gray-100">Dashboard</h1>
+        <div className="flex items-center justify-between mb-4">
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Dashboard</h1>
+          <select
+            value={selectedMonthIndex}
+            onChange={(e) => setSelectedMonthIndex(Number(e.target.value))}
+            className="border border-gray-300 dark:border-gray-600 rounded px-3 py-2 text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-700"
+          >
+            {months.map((m, i) => (
+              <option key={i} value={i}>{m.label}</option>
+            ))}
+          </select>
+        </div>
 
         {loading ? (
           <p className="text-gray-500 dark:text-gray-400">Loading...</p>
         ) : (
           <div className="grid grid-cols-2 gap-4">
             <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm p-6">
-              <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">This month's investment return</p>
-              {monthlyReturn !== null ? (
+              <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">{selectedMonth.label} investment return</p>
+              {investments.length > 0 ? (
                 <p className={`text-2xl font-bold ${monthlyReturn >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
                   {monthlyReturn >= 0 ? '+' : ''}${monthlyReturn.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </p>
